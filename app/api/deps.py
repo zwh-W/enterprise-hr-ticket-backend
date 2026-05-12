@@ -25,8 +25,8 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    db: Annotated[Session, Depends(get_db)],
+        token: Annotated[str, Depends(oauth2_scheme)],
+        db: Annotated[Session, Depends(get_db)],
 ) -> User:
     payload = decode_access_token(token)
     subject = payload.get("sub")
@@ -58,7 +58,7 @@ def require_roles(*allowed_roles: UserRole) -> Callable[..., User]:
 
 
 def verify_internal_api_key(
-    x_internal_api_key: Annotated[str | None, Header(alias="X-Internal-API-Key")] = None,
+        x_internal_api_key: Annotated[str | None, Header(alias="X-Internal-API-Key")] = None,
 ) -> None:
     settings = get_settings()
     if not x_internal_api_key or x_internal_api_key != settings.internal_api_key:

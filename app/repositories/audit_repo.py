@@ -10,14 +10,14 @@ from app.models.audit_log import AuditLog
 class AuditRepository:
     @staticmethod
     def create(
-        db: Session,
-        *,
-        user_id: uuid.UUID | None,
-        action: str,
-        resource_type: str,
-        resource_id: str,
-        before_data: dict[str, Any] | None = None,
-        after_data: dict[str, Any] | None = None,
+            db: Session,
+            *,
+            user_id: uuid.UUID | None,
+            action: str,
+            resource_type: str,
+            resource_id: str,
+            before_data: dict[str, Any] | None = None,
+            after_data: dict[str, Any] | None = None,
     ) -> AuditLog:
         audit_log = AuditLog(
             user_id=user_id,
@@ -39,11 +39,11 @@ class AuditRepository:
 
     @staticmethod
     def list_by_resource_type(
-        db: Session,
-        *,
-        resource_type: str,
-        offset: int,
-        limit: int,
+            db: Session,
+            *,
+            resource_type: str,
+            offset: int,
+            limit: int,
     ) -> tuple[list[AuditLog], int]:
         total_stmt = select(func.count(AuditLog.id)).where(AuditLog.resource_type == resource_type)
         total = db.scalar(total_stmt) or 0

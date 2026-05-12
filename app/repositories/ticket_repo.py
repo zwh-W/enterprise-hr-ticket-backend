@@ -35,11 +35,11 @@ class TicketRepository:
 
     @staticmethod
     def list_by_creator(
-        db: Session,
-        *,
-        creator_id: uuid.UUID,
-        offset: int,
-        limit: int,
+            db: Session,
+            *,
+            creator_id: uuid.UUID,
+            offset: int,
+            limit: int,
     ) -> tuple[list[Ticket], int]:
         total_stmt = select(func.count(Ticket.id)).where(Ticket.creator_id == creator_id)
         total = db.scalar(total_stmt) or 0
