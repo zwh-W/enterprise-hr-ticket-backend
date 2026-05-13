@@ -1,0 +1,18 @@
+# Project-level non-secret defaults.
+# 敏感配置不要放在这里；例如 JWT_SECRET_KEY、INTERNAL_API_KEY、数据库密码仍然放 .env。
+
+app_name: enterprise-hr-ticket-backend
+environment: local
+debug: true
+
+# 容器内默认使用 postgres 作为主机名；本机直接运行 Python 时改成 localhost。
+database_url: postgresql+psycopg://postgres:postgres@postgres:5432/enterprise_hr_ticket
+test_database_url: sqlite+pysqlite:///:memory
+
+jwt_algorithm: HS256
+access_token_expire_minutes: 60
+
+redis_url: redis://redis:6379/0
+
+# 第二阶段新增：幂等键默认保留 24 小时。
+idempotency_key_ttl_hours: 24

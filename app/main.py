@@ -6,7 +6,7 @@ from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging
 from app.middlewares.request_context import RequestContextMiddleware
 
-settings = get_settings()  # 实例化的时候会加载配置（config.py）
+settings = get_settings()
 configure_logging()
 
 app = FastAPI(

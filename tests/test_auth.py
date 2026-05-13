@@ -1,3 +1,5 @@
+"""Authentication tests."""
+
 from tests.conftest import auth_headers, login_user, register_user
 
 
@@ -13,6 +15,21 @@ def test_register_login_and_me(client):
     me_response = client.get("/users/me", headers=auth_headers(token))
     assert me_response.status_code == 200
     assert me_response.json()["email"] == "employee@example.com"
+
+
+def test_swagger_token_login_uses_form_data(client):
+    """Swagger Authorize 调用的是 /auth/token，而不是 JSON /auth/login。"""
+    register_user(client, email="employee@example.com", username="employee01")
+
+    response = client.post(
+        "/auth/token",
+        data={"username": "employee@example.com", "password": "Password123!"},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["token_type"] == "bearer"
+    assert response.json()["access_token"]
 
 
 def test_register_duplicate_email_returns_conflict(client):
