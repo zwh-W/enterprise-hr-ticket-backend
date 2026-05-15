@@ -80,3 +80,5 @@ docker-compose.override.yml
 tmp/
 temp/
 *.tmp
+# Local validation outputs
+reports/

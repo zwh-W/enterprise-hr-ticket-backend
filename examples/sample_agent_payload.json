@@ -1,0 +1,46 @@
+{
+  "pending_action": {
+    "pending_action_id": "pa_demo_001",
+    "session_id": "session_demo_001",
+    "action_type": "create_hr_ticket",
+    "tool_name": "create_hr_ticket",
+    "arguments": {
+      "ticket_type": "leave_request",
+      "title": "年假申请：5月11日-13日",
+      "description": "申请年假3天，时间为2026年5月11日至5月13日。",
+      "priority": "normal"
+    }
+  },
+  "confirm_result": {
+    "confirmed": true,
+    "confirmed_by": "user:employee_001",
+    "confirmed_at": "2026-05-13T10:30:00Z"
+  },
+  "rag_result": {
+    "query": "员工年假申请规则",
+    "answer": "根据员工年假管理制度，员工申请年假应提前提交申请，并经 HR 审核。",
+    "sources": [
+      {
+        "document_id": "doc_annual_leave",
+        "document_name": "员工年假管理制度.pdf",
+        "chunk_id": "chunk_001",
+        "breadcrumb": "第二章 > 第三条",
+        "page_number": 4,
+        "score": 0.87,
+        "content": "员工申请年假应提前提交申请，并经 HR 审核。"
+      }
+    ]
+  },
+  "trace_context": {
+    "trace_id": "trace_demo_001",
+    "tool_call_id": "tool_call_demo_001",
+    "agent_trace": {
+      "agent_type": "function_calling",
+      "llm": "qwen",
+      "steps": [
+        {"type": "tool_call", "tool_name": "rag_search", "output_summary": "命中年假制度"},
+        {"type": "pending_action", "action_type": "create_hr_ticket", "requires_confirmation": true}
+      ]
+    }
+  }
+}
