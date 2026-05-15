@@ -1,7 +1,6 @@
 """Idempotency model.
 
 第二阶段核心表：idempotency_keys。
-幂等键表
 它用于解决 Agent / 外部服务重复调用 Internal API 时重复创建工单的问题。
 
 典型场景：

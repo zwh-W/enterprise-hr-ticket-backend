@@ -4,6 +4,13 @@
 Alembic 自动生成迁移时会 import app.models。
 """
 
+from app.models.agent_trace import (
+    AgentToolCall,
+    AgentToolCallStatus,
+    PendingActionExecution,
+    PendingActionExecutionStatus,
+    TicketPolicyReference,
+)
 from app.models.audit_log import AuditLog
 from app.models.idempotency import IdempotencyKey, IdempotencyStatus
 from app.models.ticket import Ticket, TicketPriority, TicketStatus, TicketType
@@ -19,4 +26,9 @@ __all__ = [
     "AuditLog",
     "IdempotencyKey",
     "IdempotencyStatus",
+    "PendingActionExecution",
+    "PendingActionExecutionStatus",
+    "AgentToolCall",
+    "AgentToolCallStatus",
+    "TicketPolicyReference",
 ]

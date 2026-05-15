@@ -44,7 +44,6 @@ def main() -> None:
         print(payload)
 
         line("2. 第一次调用 TicketService.create_ticket_from_internal")
-
         first_ticket = TicketService.create_ticket_from_internal(db, payload=payload)
         print("first_ticket.id =", first_ticket.id)
         print("first_ticket.ticket_no =", first_ticket.ticket_no)

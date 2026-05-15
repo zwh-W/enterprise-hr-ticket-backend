@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.api.routers import audit_logs, auth, internal, tickets, users
+from app.api.routers import agent_trace, audit_logs, auth, internal, tickets, users
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging
@@ -22,6 +22,7 @@ app.include_router(users.router)
 app.include_router(tickets.router)
 app.include_router(audit_logs.router)
 app.include_router(internal.router)
+app.include_router(agent_trace.router)
 
 
 @app.get("/health", tags=["health"])
