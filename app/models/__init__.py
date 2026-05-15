@@ -14,6 +14,7 @@ from app.models.agent_trace import (
 from app.models.audit_log import AuditLog
 from app.models.idempotency import IdempotencyKey, IdempotencyStatus
 from app.models.ticket import Ticket, TicketPriority, TicketStatus, TicketType
+from app.models.ticket_transition import TicketStatusTransition
 from app.models.user import User, UserRole
 
 __all__ = [
@@ -23,6 +24,7 @@ __all__ = [
     "TicketType",
     "TicketStatus",
     "TicketPriority",
+    "TicketStatusTransition",
     "AuditLog",
     "IdempotencyKey",
     "IdempotencyStatus",

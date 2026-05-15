@@ -24,11 +24,11 @@ class IdempotencyRepository:
 
     @staticmethod
     def create_processing(
-            db: Session,
-            *,
-            key: str,
-            request_hash: str,
-            expires_at: datetime | None,
+        db: Session,
+        *,
+        key: str,
+        request_hash: str,
+        expires_at: datetime | None,
     ) -> IdempotencyKey:
         """创建 processing 状态的幂等记录。
 
@@ -46,12 +46,12 @@ class IdempotencyRepository:
 
     @staticmethod
     def mark_succeeded(
-            db: Session,
-            item: IdempotencyKey,
-            *,
-            resource_type: str,
-            resource_id: str,
-            response_body: dict[str, Any],
+        db: Session,
+        item: IdempotencyKey,
+        *,
+        resource_type: str,
+        resource_id: str,
+        response_body: dict[str, Any],
     ) -> IdempotencyKey:
         """把幂等记录标记为成功，并保存资源引用和响应快照。"""
         item.status = IdempotencyStatus.succeeded

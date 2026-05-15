@@ -60,65 +60,39 @@ class PendingActionExecution(Base):
 
     __tablename__ = "pending_action_executions"
 
-    # 主键唯一ID
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
-    # 外部会话ID，关联用户对话上下文
-    external_session_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False, comment="外部会话ID")
+    external_session_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    pending_action_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
 
-    # Agent 侧生成的待执行动作ID，用于追踪业务动作
-    pending_action_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False, comment="待执行动作ID")
-
-    # 幂等键，防止同一个动作被重复执行
-    idempotency_key: Mapped[str] = mapped_column(String(255), index=True, nullable=False, comment="幂等键，防重复执行")
-
-    # 动作类型，默认创建HR工单
-    action_type: Mapped[str] = mapped_column(String(100), nullable=False, default="create_hr_ticket",
-                                             comment="动作类型")
-
-    # 动作执行状态（已接收/成功/失败/重复/冲突）
+    action_type: Mapped[str] = mapped_column(String(100), nullable=False, default="create_hr_ticket")
     status: Mapped[PendingActionExecutionStatus] = mapped_column(
         Enum(PendingActionExecutionStatus, name="pending_action_execution_status", native_enum=False),
         nullable=False,
         default=PendingActionExecutionStatus.received,
         index=True,
-        comment="动作执行状态"
     )
 
-    # 外部系统确认人ID（来自Agent，非本系统用户）
-    confirmed_by_external: Mapped[str | None] = mapped_column(String(128), nullable=True, comment="外部确认人ID")
+    # 用户确认信息来自 Agent 服务。Backend 不直接管理 Agent 侧用户体系，所以保存 external 表示。
+    confirmed_by_external: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    # 外部用户人工确认时间
-    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True,
-                                                          comment="人工确认时间")
+    # 执行成功后的业务资源引用。当前主要是 ticket。
+    result_resource_type: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    result_resource_id: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
 
-    # 动作实际执行完成时间
-    executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, comment="动作执行时间")
+    # 失败 / 冲突时记录标准错误信息，便于 Agent 给用户生成可理解反馈。
+    error_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # 执行成功后生成的业务资源类型（如 ticket）
-    result_resource_type: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True,
-                                                             comment="结果资源类型")
-
-    # 执行成功后生成的业务资源ID（如工单ID）
-    result_resource_id: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True, comment="结果资源ID")
-
-    # 执行失败时的错误码
-    error_code: Mapped[str | None] = mapped_column(String(100), nullable=True, comment="错误码")
-
-    # 执行失败时的错误详情
-    error_message: Mapped[str | None] = mapped_column(Text, nullable=True, comment="错误信息")
-
-    # 记录创建时间
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now,
-                                                 comment="创建时间")
-
-    # 记录更新时间，每次修改自动刷新
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         default=utc_now,
         onupdate=utc_now,
-        comment="更新时间"
     )
 
 
@@ -135,63 +109,35 @@ class AgentToolCall(Base):
 
     __tablename__ = "agent_tool_calls"
 
-    # 主键ID，数据库唯一标识
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
-    # 全局链路追踪ID，串联一次完整的Agent调用流程
-    trace_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False,
-                                          comment="全局链路ID，用于全流程问题排查")
+    trace_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    tool_call_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    external_session_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    pending_action_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
 
-    # Agent内部单次工具调用唯一ID，区分同一次链路中的不同工具调用
-    tool_call_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False, comment="Agent工具调用唯一ID")
+    tool_name: Mapped[str] = mapped_column(String(100), nullable=False, default="create_hr_ticket")
 
-    # 外部会话ID，关联用户前端/外部系统会话
-    external_session_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False,
-                                                     comment="外部会话唯一标识")
+    # JSON 字段保存 Agent 调用参数与后端响应快照。后续排查时可以还原当时调用现场。
+    request_payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    response_payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
-    # 关联Agent侧pending_action业务ID，绑定业务动作
-    pending_action_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False,
-                                                   comment="关联的PendingAction ID")
-
-    # 工具名称，标识当前调用的工具类型
-    tool_name: Mapped[str] = mapped_column(String(100), nullable=False, default="create_hr_ticket",
-                                           comment="工具名称，默认创建HR工单")
-
-    # 工具请求参数快照，完整保存Agent传入的所有参数
-    request_payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True, comment="工具请求参数JSON快照")
-
-    # 工具响应结果快照，完整保存后端返回的结果
-    response_payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True, comment="工具响应结果JSON快照")
-
-    # 工具调用执行状态
     status: Mapped[AgentToolCallStatus] = mapped_column(
         Enum(AgentToolCallStatus, name="agent_tool_call_status", native_enum=False),
         nullable=False,
         default=AgentToolCallStatus.received,
         index=True,
-        comment="工具调用状态：已接收/成功/失败/重复/冲突"
     )
+    error_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    # 错误码，调用失败时标识错误类型
-    error_code: Mapped[str | None] = mapped_column(String(100), nullable=True, comment="错误码，调用失败时使用")
-
-    # 错误信息，调用失败时记录详细原因
-    error_message: Mapped[str | None] = mapped_column(Text, nullable=True, comment="错误详情信息")
-
-    # 接口耗时，单位：毫秒，用于性能监控
-    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True, comment="接口耗时（毫秒）")
-
-    # 记录创建时间
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now,
-                                                 comment="创建时间")
-
-    # 记录更新时间，每次更新自动刷新
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         default=utc_now,
         onupdate=utc_now,
-        comment="更新时间"
     )
 
 
@@ -207,53 +153,28 @@ class TicketPolicyReference(Base):
 
     __tablename__ = "ticket_policy_references"
 
-    # 主键ID，数据库唯一标识
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
-    # 关联的工单ID，与tickets表强关联，删除工单时级联删除本条依据
     ticket_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True),
         ForeignKey("tickets.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-        comment="关联的工单ID"
     )
+    external_session_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    pending_action_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
 
-    # 外部会话ID，用于关联用户对话上下文
-    external_session_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True,
-                                                            comment="外部会话ID")
+    rag_query: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rag_answer_snapshot: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # 关联Agent侧pending_action ID，绑定动作来源
-    pending_action_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True,
-                                                          comment="关联的PendingAction ID")
+    document_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    document_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    chunk_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    breadcrumb: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    page_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    retrieval_score: Mapped[float | None] = mapped_column(Float, nullable=True)
 
-    # RAG检索时的用户原始问题
-    rag_query: Mapped[str | None] = mapped_column(Text, nullable=True, comment="RAG检索的用户问题")
+    # 保存 chunk 原文快照，避免后续知识库更新后无法解释历史工单。
+    content_snapshot: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # RAG生成的答案快照，存档不可修改
-    rag_answer_snapshot: Mapped[str | None] = mapped_column(Text, nullable=True, comment="RAG回答快照（存档）")
-
-    # 知识库文档ID
-    document_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True, comment="知识库文档ID")
-
-    # 文档名称（如：员工手册、考勤制度）
-    document_name: Mapped[str | None] = mapped_column(String(255), nullable=True, comment="文档名称")
-
-    # 知识库切片ID（RAG检索最小单元）
-    chunk_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True, comment="文档切片ID")
-
-    # 文档目录/路径层级（如：第一章->第二节）
-    breadcrumb: Mapped[str | None] = mapped_column(String(500), nullable=True, comment="文档目录路径")
-
-    # 文档页码（如PDF/Word页号）
-    page_number: Mapped[int | None] = mapped_column(Integer, nullable=True, comment="文档页码")
-
-    # 检索相关性得分（越高越匹配）
-    retrieval_score: Mapped[float | None] = mapped_column(Float, nullable=True, comment="检索匹配度分数")
-
-    # 文档切片原文快照，保证知识库更新后仍可查看历史依据
-    content_snapshot: Mapped[str | None] = mapped_column(Text, nullable=True, comment="制度条款原文快照")
-
-    # 创建时间（记录生成本条依据的时间）
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now,
-                                                 comment="创建时间")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)

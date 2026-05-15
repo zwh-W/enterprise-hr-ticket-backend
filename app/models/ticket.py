@@ -18,6 +18,7 @@ from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.user import User
+    from app.models.ticket_transition import TicketStatusTransition
 
 
 class TicketType(str, enum.Enum):
@@ -34,7 +35,7 @@ class TicketType(str, enum.Enum):
 
 
 class TicketStatus(str, enum.Enum):
-    """工单状态。第一阶段只创建 open；后续阶段会扩展状态机。"""
+    """工单状态。第四阶段引入轻量状态机和状态流转记录。"""
 
     open = "open"
     processing = "processing"
@@ -126,4 +127,10 @@ class Ticket(Base):
         "User",
         foreign_keys=[assignee_id],
         back_populates="assigned_tickets",
+    )
+
+    transitions: Mapped[list["TicketStatusTransition"]] = relationship(
+        "TicketStatusTransition",
+        back_populates="ticket",
+        cascade="all, delete-orphan",
     )

@@ -26,14 +26,14 @@ class PendingActionExecutionRepository:
 
     @staticmethod
     def create_received(
-            db: Session,
-            *,
-            external_session_id: str,
-            pending_action_id: str,
-            idempotency_key: str,
-            action_type: str,
-            confirmed_by_external: str | None,
-            confirmed_at: datetime | None,
+        db: Session,
+        *,
+        external_session_id: str,
+        pending_action_id: str,
+        idempotency_key: str,
+        action_type: str,
+        confirmed_by_external: str | None,
+        confirmed_at: datetime | None,
     ) -> PendingActionExecution:
         """创建 received 状态记录，表示后端已经接收到这次业务动作。"""
         item = PendingActionExecution(
@@ -51,11 +51,11 @@ class PendingActionExecutionRepository:
 
     @staticmethod
     def mark_succeeded(
-            db: Session,
-            item: PendingActionExecution,
-            *,
-            result_resource_type: str,
-            result_resource_id: str,
+        db: Session,
+        item: PendingActionExecution,
+        *,
+        result_resource_type: str,
+        result_resource_id: str,
     ) -> PendingActionExecution:
         """标记 pending_action 首次执行成功。"""
         item.status = PendingActionExecutionStatus.succeeded
@@ -68,11 +68,11 @@ class PendingActionExecutionRepository:
 
     @staticmethod
     def mark_replayed(
-            db: Session,
-            item: PendingActionExecution,
-            *,
-            result_resource_type: str,
-            result_resource_id: str,
+        db: Session,
+        item: PendingActionExecution,
+        *,
+        result_resource_type: str,
+        result_resource_id: str,
     ) -> PendingActionExecution:
         """标记为幂等重放：没有创建新资源，而是复用已有资源。"""
         item.status = PendingActionExecutionStatus.idempotent_replayed
@@ -98,8 +98,7 @@ class PendingActionExecutionRepository:
     def list_all(db: Session, *, offset: int, limit: int) -> tuple[list[PendingActionExecution], int]:
         """分页查询全部 pending_action 执行记录。"""
         total = db.scalar(select(func.count(PendingActionExecution.id))) or 0
-        stmt = select(PendingActionExecution).order_by(PendingActionExecution.created_at.desc()).offset(offset).limit(
-            limit)
+        stmt = select(PendingActionExecution).order_by(PendingActionExecution.created_at.desc()).offset(offset).limit(limit)
         return list(db.scalars(stmt).all()), total
 
     @staticmethod
@@ -119,14 +118,14 @@ class AgentToolCallRepository:
 
     @staticmethod
     def create_received(
-            db: Session,
-            *,
-            trace_id: str,
-            tool_call_id: str,
-            external_session_id: str,
-            pending_action_id: str,
-            tool_name: str,
-            request_payload: dict[str, Any],
+        db: Session,
+        *,
+        trace_id: str,
+        tool_call_id: str,
+        external_session_id: str,
+        pending_action_id: str,
+        tool_name: str,
+        request_payload: dict[str, Any],
     ) -> AgentToolCall:
         """创建 received 状态工具调用日志。"""
         item = AgentToolCall(
@@ -144,11 +143,11 @@ class AgentToolCallRepository:
 
     @staticmethod
     def mark_succeeded(
-            db: Session,
-            item: AgentToolCall,
-            *,
-            response_payload: dict[str, Any],
-            latency_ms: int,
+        db: Session,
+        item: AgentToolCall,
+        *,
+        response_payload: dict[str, Any],
+        latency_ms: int,
     ) -> AgentToolCall:
         """标记工具调用成功。"""
         item.status = AgentToolCallStatus.succeeded
@@ -160,11 +159,11 @@ class AgentToolCallRepository:
 
     @staticmethod
     def mark_replayed(
-            db: Session,
-            item: AgentToolCall,
-            *,
-            response_payload: dict[str, Any],
-            latency_ms: int,
+        db: Session,
+        item: AgentToolCall,
+        *,
+        response_payload: dict[str, Any],
+        latency_ms: int,
     ) -> AgentToolCall:
         """标记工具调用为 replayed，表示复用了幂等结果。"""
         item.status = AgentToolCallStatus.replayed
@@ -176,11 +175,11 @@ class AgentToolCallRepository:
 
     @staticmethod
     def mark_conflict(
-            db: Session,
-            item: AgentToolCall,
-            *,
-            error_message: str,
-            latency_ms: int,
+        db: Session,
+        item: AgentToolCall,
+        *,
+        error_message: str,
+        latency_ms: int,
     ) -> AgentToolCall:
         """标记工具调用为 conflict。"""
         item.status = AgentToolCallStatus.conflict
@@ -204,13 +203,13 @@ class TicketPolicyReferenceRepository:
 
     @staticmethod
     def create_many(
-            db: Session,
-            *,
-            ticket_id: uuid.UUID,
-            external_session_id: str | None,
-            pending_action_id: str | None,
-            rag_answer_snapshot: str | None,
-            references: list[dict[str, Any]],
+        db: Session,
+        *,
+        ticket_id: uuid.UUID,
+        external_session_id: str | None,
+        pending_action_id: str | None,
+        rag_answer_snapshot: str | None,
+        references: list[dict[str, Any]],
     ) -> list[TicketPolicyReference]:
         """批量保存 RAG sources 快照。"""
         items: list[TicketPolicyReference] = []

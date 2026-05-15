@@ -69,100 +69,29 @@ class InternalTicketCreate(BaseModel):
     - agent_trace：保存 Agent 侧 trace 摘要；它不参与核心业务建模，只用于排查。
     """
 
-    # 外部会话唯一标识，关联前端/外部系统会话，必填
-    external_session_id: str = Field(
-        min_length=1, max_length=128,
-        description="外部会话ID，关联前端/外部系统会话上下文"
-    )
+    external_session_id: str = Field(min_length=1, max_length=128)
+    pending_action_id: str = Field(min_length=1, max_length=128)
+    idempotency_key: str = Field(min_length=8, max_length=255)
 
-    # Agent侧待处理动作的业务ID，第二阶段必填关键字段
-    pending_action_id: str = Field(
-        min_length=1, max_length=128,
-        description="Agent侧pending_action业务唯一ID"
-    )
+    # trace_id / tool_call_id 如果 Agent 暂时不传，后端会自动生成，保证接口兼容第二阶段。
+    trace_id: str | None = Field(default=None, max_length=128)
+    tool_call_id: str | None = Field(default=None, max_length=128)
+    tool_name: str = Field(default="create_hr_ticket", max_length=100)
 
-    # 幂等键，用于防止重复创建工单，必填
-    idempotency_key: str = Field(
-        min_length=8, max_length=255,
-        description="幂等键，保证请求幂等性，避免重复创建真实工单"
-    )
+    ticket_type: TicketType
+    title: str = Field(min_length=2, max_length=255)
+    description: str = Field(min_length=1)
+    created_by_external: str = Field(min_length=1, max_length=128)
+    priority: TicketPriority = TicketPriority.normal
 
-    # 链路追踪ID，不传则后端自动生成，保证接口向下兼容
-    trace_id: str | None = Field(
-        default=None, max_length=128,
-        description="链路追踪ID，未传入时后端自动生成"
-    )
+    confirmed_by_external: str | None = Field(default=None, max_length=128)
+    confirmed_at: datetime | None = None
 
-    # 工具调用ID，不传则后端自动生成，保证接口向下兼容
-    tool_call_id: str | None = Field(
-        default=None, max_length=128,
-        description="Agent工具调用ID，未传入时后端自动生成"
-    )
+    rag_answer_snapshot: str | None = None
+    rag_references: list[RagReferenceCreate] = Field(default_factory=list)
 
-    # 调用的工具名称，固定默认值
-    tool_name: str = Field(
-        default="create_hr_ticket", max_length=100,
-        description="调用的工具名称，默认创建HR工单"
-    )
-
-    # 工单类型，业务枚举必填
-    ticket_type: TicketType = Field(
-        description="工单类型（业务枚举）"
-    )
-
-    # 工单标题，必填
-    title: str = Field(
-        min_length=2, max_length=255,
-        description="工单标题"
-    )
-
-    # 工单描述/详情，必填
-    description: str = Field(
-        min_length=1,
-        description="工单详细描述内容"
-    )
-
-    # 外部系统创建人标识，必填
-    created_by_external: str = Field(
-        min_length=1, max_length=128,
-        description="外部系统创建人唯一标识"
-    )
-
-    # 工单优先级，默认普通优先级
-    priority: TicketPriority = Field(
-        default=TicketPriority.normal,
-        description="工单优先级，默认为普通"
-    )
-
-    # 人工确认人标识（Human-in-the-loop），可选
-    confirmed_by_external: str | None = Field(
-        default=None, max_length=128,
-        description="人工复核确认人标识（人在回路）"
-    )
-
-    # 人工确认时间，可选
-    confirmed_at: datetime | None = Field(
-        default=None,
-        description="人工复核确认时间"
-    )
-
-    # RAG智能回答快照，用于存档溯源
-    rag_answer_snapshot: str | None = Field(
-        default=None,
-        description="RAG制度依据回答快照（存档用）"
-    )
-
-    # RAG参考文档/制度列表，默认空列表
-    rag_references: list[RagReferenceCreate] = Field(
-        default_factory=list,
-        description="RAG参考依据列表"
-    )
-
-    # Agent原始追踪数据，仅用于问题排查，不参与业务逻辑
-    agent_trace: dict[str, Any] | None = Field(
-        default=None,
-        description="Agent调用链路摘要，仅用于问题排查"
-    )
+    # Agent 原始 trace 摘要，存入 agent_tool_calls.request_payload，方便排查。
+    agent_trace: dict[str, Any] | None = None
 
 
 class InternalTicketResponse(BaseModel):

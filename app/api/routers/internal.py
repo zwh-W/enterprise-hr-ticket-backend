@@ -24,7 +24,7 @@ router = APIRouter(prefix="/internal", tags=["internal"])
 def create_ticket_from_internal(payload: InternalTicketCreate, db: Session = Depends(get_db)):
     """Agent 确认 pending_action 后创建真实 HR 工单。
 
-    幂等规则由 TicketService.create_ticket_from_internal 负责。
+    幂等规则由 InternalTicketService.create_ticket_from_internal 负责。
     Router 不直接写数据库，也不做幂等业务判断。
     """
-    return InternalTicketService.create_ticket_from_internal(db, payload=payload)
+    return InternalTicketService.create_ticket_from_internal(db=db, payload=payload)
